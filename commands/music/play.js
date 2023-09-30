@@ -1,17 +1,15 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const ytdl = require("ytdl-core");
 const yts = require("yt-search");
 
+const { v4: uuidv4 } = require("uuid");
+
 const {
-  AudioPlayer,
+  AudioPlayerStatus,
   StreamType,
   createAudioPlayer,
   createAudioResource,
-  entersState,
   joinVoiceChannel,
-  getVoiceConnection,
-  VoiceConnectionStatus,
-  AudioPlayerStatus,
 } = require("@discordjs/voice");
 
 async function videosearch(cancion) {
@@ -30,6 +28,7 @@ module.exports = {
         .setRequired(true)
     ),
   async execute(interaction) {
+    //Obtiene el canal de voz del usuario que realiza la interacción
     const vc = interaction.member.voice.channel;
 
     //No se encuentra en un canal de voz
@@ -51,7 +50,11 @@ module.exports = {
     }
 
     //Descarga el audio de youtube
-    const stream = await ytdl(vdRepro.url, { filter: "audioonly" });
+    const stream = await ytdl(vdRepro.url, {
+      filter: "audioonly",
+      opusEncoded: true,
+      encoderArgs: ["-af", "bass=g=5"],
+    });
 
     //Define la conexión al canal de voz
     const voiceConnection = await joinVoiceChannel({
@@ -60,113 +63,37 @@ module.exports = {
       adapterCreator: interaction.guild.voiceAdapterCreator,
     });
 
-    const connection = await getVoiceConnection(interaction.guildId);
-    
     //Crea el reproductor de audio
     const player = createAudioPlayer();
-    
-    
+
     //Define el recurso con su tipo
-    const resource = await createAudioResource(stream, {
+    const resource = createAudioResource(stream, {
       inputType: StreamType.Arbitrary,
     });
-    
-    try {
-    
-    await entersState(voiceConnection, VoiceConnectionStatus.Ready, 5000);
-    
-    console.log("Connected");
-    
-    } catch (error) {
-    
-    console.log("Voice Connection not ready within 5s.", error);
-    
-    return null;
-    
-    }
 
-    await connection.subscribe(player);
+    //Añade el reproductor a la conexión con el chat de voz
+    await voiceConnection.subscribe(player);
 
-
-    player.on(AudioPlayerStatus.Playing, () => {
-      console.log('The audio player has started playing!');
-    });
-
-    player.on('error', error => {
-      console.error('Error:', error.message);
-    });
-    
+    //Reproduce la canción
     await player.play(resource);
 
+    //Desconecta al bot cuando no este en uso
+    player.on(AudioPlayerStatus.Idle, () => voiceConnection.destroy());
 
+    //Montando la respuesta
+    const embed = new EmbedBuilder()
+      .setColor(0xb6e0d0)
+      .setTitle(vdRepro.title)
+      .setURL(vdRepro.url)
+      .setAuthor({
+        name: vdRepro.author.name,
+        iconUrl: vdRepro.thumbnail,
+        url: vdRepro.author.url,
+      })
+      .setDescription(vdRepro.description)
+      .setImage(vdRepro.image)
+      .setTimestamp();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /*const voiceChannel = interaction.options.getChannel('channel');
-
-    const voiceConnection = joinVoiceChannel({
-    
-    channelId: voiceChannel.id,
-    
-    guildId: interaction.guildId,
-    
-    adapterCreator: interaction.guild.voiceAdapterCreator,
-    
-    })
-    
-    const connection = getVoiceConnection(interaction.guildId);
-    
-    const player = createAudioPlayer();
-    
-    const resource = createAudioResource('G:\file.mp3');
-    
-    try {
-    
-    await entersState(voiceConnection, VoiceConnectionStatus.Ready, 5000);
-    
-    console.log("Connected: " + voiceChannel.guild.name);
-    
-    } catch (error) {
-    
-    console.log("Voice Connection not ready within 5s.", error);
-    
-    return null;
-    
-    }
-    
-    connection.subscribe(player);
-    
-    player.play(resource);
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-    
-    await interaction.reply({
-      content: `Reproduciendo: ${vdRepro.title}`,
-    });
+    await interaction.reply({embeds: [embed]});
   },
 };
