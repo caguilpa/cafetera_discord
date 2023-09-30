@@ -1,0 +1,6 @@
+.vagrant/
+.vscode
+
+/bin/*
+/node_modules/*
+storage/
