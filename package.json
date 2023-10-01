@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "init": "node ./deploy-commands.js && node ."
+    "dev": "node ./deploy-commands.js && node ."
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
     "libsodium-wrappers": "^0.7.13",
     "node-opus": "^0.3.3",
     "play-dl": "^1.9.7",
+    "uuid": "^9.0.1",
     "yt-search": "^2.10.4",
     "ytdl-core": "^4.11.5"
   }

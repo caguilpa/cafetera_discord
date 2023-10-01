@@ -1,12 +1,22 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const ytdl = require("ytdl-core");
 const yts = require("yt-search");
+const play = require("play-dl");
 
 const { v4: uuidv4 } = require("uuid");
 
 const {
+  queue,
+  agregar,
+  musicEmbed,
+  queueEmbed,
+  nextSong,
+} = require("../../global/music");
+
+const {
   AudioPlayerStatus,
   StreamType,
+  getVoiceConnection,
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
@@ -38,23 +48,36 @@ module.exports = {
         ephemeral: true,
       });
     }
-    //Búsqueda de video
-    const vdRepro = await videosearch(interaction.options.getString("cancion"));
+
+    //# BUSQUEDA DE VIDEO
+    const ytInfo = await play.search(interaction.options.getString("cancion"));
+    const stream = await play.stream(ytInfo[0].url);
+
+    //% Agregar cancion a lista re produccion
+    const song = { key: uuidv4(), title: ytInfo[0].title, url: ytInfo[0].url };
+    agregar(interaction.guild.id, song);
 
     //No se encontraron videos para la búsqueda
-    if (!vdRepro) {
+    if (!ytInfo) {
       return await interaction.reply({
         content: "No se encontraron videos",
         ephemeral: true,
       });
     }
 
-    //Descarga el audio de youtube
-    const stream = await ytdl(vdRepro.url, {
-      filter: "audioonly",
-      opusEncoded: true,
-      encoderArgs: ["-af", "bass=g=5"],
-    });
+    //& Comprobar que no se este reproduciendo musica
+    const pvc = getVoiceConnection(interaction.guild.id);
+    if (pvc)
+      return interaction.reply({ embeds: [
+        queueEmbed(
+          ytInfo[0].title + ' (' + ytInfo[0].durationRaw + ')',
+          ytInfo[0].url,
+          ytInfo[0].thumbnails[0].url,
+          ytInfo[0].channel.name,
+          ytInfo[0].thumbnail,
+          ytInfo[0].channel.url
+        )]}
+      );
 
     //Define la conexión al canal de voz
     const voiceConnection = await joinVoiceChannel({
@@ -63,37 +86,58 @@ module.exports = {
       adapterCreator: interaction.guild.voiceAdapterCreator,
     });
 
-    //Crea el reproductor de audio
-    const player = createAudioPlayer();
-
-    //Define el recurso con su tipo
-    const resource = createAudioResource(stream, {
-      inputType: StreamType.Arbitrary,
+    const resource = createAudioResource(stream.stream, {
+      inputType: stream.type,
+      metadata: {
+        title: ytInfo[0].title,
+        key: song.key,
+      },
     });
 
-    //Añade el reproductor a la conexión con el chat de voz
-    await voiceConnection.subscribe(player);
+    //Crea el reproductor de audio
+    const player = createAudioPlayer();
 
     //Reproduce la canción
     await player.play(resource);
 
-    //Desconecta al bot cuando no este en uso
-    player.on(AudioPlayerStatus.Idle, () => voiceConnection.destroy());
+    //Añade el reproductor a la conexión con el chat de voz
+    await voiceConnection.subscribe(player);
 
+    console.log(ytInfo[0]);
     //Montando la respuesta
-    const embed = new EmbedBuilder()
-      .setColor(0xb6e0d0)
-      .setTitle(vdRepro.title)
-      .setURL(vdRepro.url)
-      .setAuthor({
-        name: vdRepro.author.name,
-        iconUrl: vdRepro.thumbnail,
-        url: vdRepro.author.url,
-      })
-      .setDescription(vdRepro.description)
-      .setImage(vdRepro.image)
-      .setTimestamp();
+    const embed = musicEmbed(
+      ytInfo[0].title + ' (' + ytInfo[0].durationRaw + ')',
+      ytInfo[0].url,
+      ytInfo[0].channel.name,
+      ytInfo[0].thumbnails[0].url,
+      ytInfo[0].channel.url,
+      ytInfo[0].thumbnails[0].url,
+      ytInfo[0].description
+    );
 
-    await interaction.reply({embeds: [embed]});
+    await interaction.reply({ embeds: [embed] });
+
+    //# En cuanto se acabe la musica el reproductor se sale
+    // console.log(player.state.resource.metadata.key);
+    //% oldS = Recaba informacion de la cancion reproducida
+    player.on(AudioPlayerStatus.Idle, async (oldS, newS) => {
+      if (
+        queue.get(interaction.guild.id).songs.length <= 1 &&
+        queue.get(interaction.guild.id).loop == false
+      ) {
+        connection.destroy();
+        queue.delete(guildId);
+        return;
+      } else {
+        return nextSong(
+          interaction.guild.id,
+          oldS.resource.metadata.key,
+          interaction,
+          player,
+          connection,
+          "auto"
+        );
+      }
+    });
   },
 };

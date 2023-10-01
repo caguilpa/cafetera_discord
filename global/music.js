@@ -1,3 +1,4 @@
+const { EmbedBuilder } = require("discord.js");
 const play = require("play-dl");
 const { createAudioResource } = require("@discordjs/voice");
 const queue = new Map();
@@ -11,10 +12,13 @@ const reproducir = async (player, msg, url, key) => {
   const ytInfo = await play.search(url);
   const stream = await play.stream(ytInfo[0].url);
   const emb = musicEmbed(
-    ytInfo[0].title,
-    ytInfo[0].description,
-    ytInfo[0].url,
-    ytInfo[0].thumbnail.url
+      ytInfo[0].title + ' (' + ytInfo[0].durationRaw + ')',
+      ytInfo[0].url,
+      ytInfo[0].channel.name,
+      ytInfo[0].thumbnails[0].url,
+      ytInfo[0].channel.url,
+      ytInfo[0].thumbnails[0].url,
+      ytInfo[0].description
   );
 
   if (msg.type == "APPLICATION_COMMAND") {
@@ -91,33 +95,43 @@ const eliminar = (title, guildId) => {
 };
 
 //% EMBED Musica en reproduccion
-const musicEmbed = (title, desc, link, image) => {
-  return {
-    author: {
-      name: "OCELOTL MUSIC",
-      icon_url:
-        "https://png.pngtree.com/png-vector/20190830/ourlarge/pngtree-music-icon-design-vector-png-image_1714137.jpg",
-    },
-    title: title,
-    description: `${desc}\n**[LINK](${link})**`,
-    color: "RED",
-    image: { url: image },
-  };
+const musicEmbed = (title, url, authorName, thumbnail, authorUrl, image, description) => {
+  return new EmbedBuilder()
+  .setColor(0xb6e0d0)
+  .setTitle(title)
+  .setURL(url)
+  .setAuthor({
+    name: authorName,
+    iconUrl: thumbnail,
+    url: authorUrl,
+  })
+  .setDescription(description)
+  .setImage(image)
+  .setTimestamp()
+};
+
+// Embed delete Song
+const deleteSongEmbed = (message, title) => {
+  return new EmbedBuilder()
+  .setColor(0xe0001a)
+  .setTitle(message)
+  .setDescription(title)
 };
 
 //% EMBED QUEUE
-const queueEmbed = (title, link, image) => {
-  return {
-    author: {
-      name: "OCELOTL MUSIC",
-      icon_url:
-        "https://png.pngtree.com/png-vector/20190830/ourlarge/pngtree-music-icon-design-vector-png-image_1714137.jpg",
-    },
-    title: "Queue Atualizada",
-    description: `**Cancion agregadar a la lista de reproduccion.**\n\nTitulo: **${title}**\n**[LINK](${link})**`,
-    color: "RED",
-    thumbnail: { url: image },
-  };
+const queueEmbed = (title, url, image, authorName,thumbnail,authorUrl) => {
+  return new EmbedBuilder()
+  .setColor(0x9dd4ab)
+  .setTitle(title)
+  .setURL(url)
+  .setAuthor({
+    name: authorName,
+    iconUrl: thumbnail,
+    url: authorUrl,
+  })
+  .setDescription("Queue Actualizada")
+  .setImage(image)
+  .setTimestamp();
 };
 
 //# Cancion Sigueinte
@@ -182,6 +196,7 @@ module.exports = {
   fullQueue,
   musicEmbed,
   queueEmbed,
+  deleteSongEmbed,
   nextSong,
   previousSong,
   loopQueue,
