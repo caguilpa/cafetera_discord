@@ -1,32 +1,21 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const ytdl = require("ytdl-core");
-const yts = require("yt-search");
+const { SlashCommandBuilder } = require("discord.js");
+
 const play = require("play-dl");
 
 const { v4: uuidv4 } = require("uuid");
 
-const {
-  queue,
-  agregar,
-  musicEmbed,
-  queueEmbed,
-  nextSong,
-} = require("../../global/music");
+const { queue, agregar, nextSong } = require("../../global/music");
+
+const { musicEmbed, queueEmbed } = require("../../global/embeds");
 
 const {
   AudioPlayerStatus,
-  StreamType,
   getVoiceConnection,
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
 } = require("@discordjs/voice");
 
-async function videosearch(cancion) {
-  const vdE = await yts(cancion);
-
-  return vdE.videos.length > 0 ? vdE.videos[0] : null;
-}
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("play")
@@ -38,6 +27,7 @@ module.exports = {
         .setRequired(true)
     ),
   async execute(interaction) {
+    
     //Obtiene el canal de voz del usuario que realiza la interacción
     const vc = interaction.member.voice.channel;
 
@@ -68,16 +58,18 @@ module.exports = {
     //& Comprobar que no se este reproduciendo musica
     const pvc = getVoiceConnection(interaction.guild.id);
     if (pvc)
-      return interaction.reply({ embeds: [
-        queueEmbed(
-          ytInfo[0].title + ' (' + ytInfo[0].durationRaw + ')',
-          ytInfo[0].url,
-          ytInfo[0].thumbnails[0].url,
-          ytInfo[0].channel.name,
-          ytInfo[0].thumbnail,
-          ytInfo[0].channel.url
-        )]}
-      );
+      return interaction.reply({
+        embeds: [
+          queueEmbed(
+            ytInfo[0].title + " (" + ytInfo[0].durationRaw + ")",
+            ytInfo[0].url,
+            ytInfo[0].thumbnails[0].url,
+            ytInfo[0].channel.name,
+            ytInfo[0].thumbnail,
+            ytInfo[0].channel.url
+          ),
+        ],
+      });
 
     //Define la conexión al canal de voz
     const voiceConnection = await joinVoiceChannel({
@@ -103,10 +95,9 @@ module.exports = {
     //Añade el reproductor a la conexión con el chat de voz
     await voiceConnection.subscribe(player);
 
-    console.log(ytInfo[0]);
     //Montando la respuesta
     const embed = musicEmbed(
-      ytInfo[0].title + ' (' + ytInfo[0].durationRaw + ')',
+      ytInfo[0].title + " (" + ytInfo[0].durationRaw + ")",
       ytInfo[0].url,
       ytInfo[0].channel.name,
       ytInfo[0].thumbnails[0].url,
@@ -125,16 +116,16 @@ module.exports = {
         queue.get(interaction.guild.id).songs.length <= 1 &&
         queue.get(interaction.guild.id).loop == false
       ) {
-        connection.destroy();
-        queue.delete(guildId);
+        voiceConnection.destroy();
+        queue.delete(interaction.guild.id);
         return;
       } else {
-        return nextSong(
+        return await nextSong(
           interaction.guild.id,
           oldS.resource.metadata.key,
           interaction,
           player,
-          connection,
+          voiceConnection,
           "auto"
         );
       }

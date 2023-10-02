@@ -14,15 +14,8 @@ const client = new Client({
 
 const CONFIG = require('./config.json');
 
-// When the client is ready, run this code (only once)
-// We use 'c' for the event parameter to keep it separate from the already defined 'client'
-/*client.once(Events.ClientReady, c => {
-	console.log(`Ready! Logged in as ${c.user.tag}`);
-
-    
-});*/
-
 loadCommands();
+
 loadEvents();
 
 client.login(CONFIG.token);
@@ -30,7 +23,6 @@ client.login(CONFIG.token);
 client.on(Events.InteractionCreate, async interaction => {
     console.log('Funciona');
 	if (!interaction.isChatInputCommand()) return;
-	//console.log(interaction);
 
     const command = interaction.client.commands.get(interaction.commandName);
 

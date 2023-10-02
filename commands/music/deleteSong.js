@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { eliminar, deleteSongEmbed } = require("../../global/music");
+const { eliminar } = require("../../global/music");
+const { deleteSongEmbed } = require("../../global/embeds");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -16,8 +17,6 @@ module.exports = {
       interaction.options.getString("titulo"),
       interaction.guild.id
     );
-
-    console.log(res.title);
 
     interaction.reply({ embeds: [deleteSongEmbed(res.msg, res.title)] });
   },

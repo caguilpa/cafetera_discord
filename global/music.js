@@ -1,12 +1,12 @@
-const { EmbedBuilder } = require("discord.js");
 const play = require("play-dl");
 const { createAudioResource } = require("@discordjs/voice");
+const { musicEmbed } = require("./embeds");
 const queue = new Map();
 
 //& Crear Reproductor
 
 const reproducir = async (player, msg, url, key) => {
-  if (msg.type == "APPLICATION_COMMAND" && msg.replied == false) {
+  if (msg.type == 2 && msg.replied == false) {
     msg.deferReply();
   }
   const ytInfo = await play.search(url);
@@ -21,7 +21,7 @@ const reproducir = async (player, msg, url, key) => {
       ytInfo[0].description
   );
 
-  if (msg.type == "APPLICATION_COMMAND") {
+  if (msg.type == 2) {
     msg.followUp({
       embeds: [emb],
     });
@@ -94,70 +94,34 @@ const eliminar = (title, guildId) => {
   return { msg: "Cancion eliminada", title: songFullTitle.title };
 };
 
-//% EMBED Musica en reproduccion
-const musicEmbed = (title, url, authorName, thumbnail, authorUrl, image, description) => {
-  return new EmbedBuilder()
-  .setColor(0xb6e0d0)
-  .setTitle(title)
-  .setURL(url)
-  .setAuthor({
-    name: authorName,
-    iconUrl: thumbnail,
-    url: authorUrl,
-  })
-  .setDescription(description)
-  .setImage(image)
-  .setTimestamp()
-};
 
-// Embed delete Song
-const deleteSongEmbed = (message, title) => {
-  return new EmbedBuilder()
-  .setColor(0xe0001a)
-  .setTitle(message)
-  .setDescription(title)
-};
-
-//% EMBED QUEUE
-const queueEmbed = (title, url, image, authorName,thumbnail,authorUrl) => {
-  return new EmbedBuilder()
-  .setColor(0x9dd4ab)
-  .setTitle(title)
-  .setURL(url)
-  .setAuthor({
-    name: authorName,
-    iconUrl: thumbnail,
-    url: authorUrl,
-  })
-  .setDescription("Queue Actualizada")
-  .setImage(image)
-  .setTimestamp();
-};
 
 //# Cancion Sigueinte
 const nextSong = async (guildId, key, msg, player, connection, type) => {
   const queue_songs = queue.get(guildId);
-
   const songKey = (song) => song.key == key;
   const nextIndex = queue_songs.songs.findIndex(songKey) + 1;
 
   if (!queue_songs.songs[nextIndex]) {
+
     if (type === "auto" && queue_songs.loop) {
+
       reproducir(
         player,
         msg,
         queue_songs.songs[0].url,
         queue_songs.songs[0].key
       );
-      if (msg.type == "APPLICATION_COMMAND") {
+      if (msg.type == 2) {
         return msg.followUp("Reiniciando las canciones");
       } else {
         return msg.channel.send("Reiniciando las canciones");
       }
     } else if (type === "auto") {
+//TODO cambiar embed
       connection.destroy();
       queue.delete(guildId);
-      return msg.reply("Sin canciones por reproducir\nQueue limpia");
+      return msg.channel.send("Sin canciones por reproducir\nQueue limpia");
     }
     return msg.reply("No tenemos mas canciones");
   }
@@ -194,10 +158,9 @@ module.exports = {
   agregar,
   eliminar,
   fullQueue,
-  musicEmbed,
-  queueEmbed,
-  deleteSongEmbed,
   nextSong,
   previousSong,
   loopQueue,
 };
+
+
