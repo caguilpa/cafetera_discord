@@ -1,8 +1,11 @@
 .vagrant/
 .vscode
 
+.env
+
 /bin/*
 /node_modules/*
 storage/
 
 config.json
+

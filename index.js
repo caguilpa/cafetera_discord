@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+require('dotenv').config();
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 
 const client = new Client({
@@ -12,13 +13,12 @@ const client = new Client({
 	],
 });
 
-const CONFIG = require('./config.json');
 
 loadCommands();
 
 loadEvents();
 
-client.login(CONFIG.token);
+client.login(process.env.TOKEN);
 
 client.on(Events.InteractionCreate, async interaction => {
     console.log('Funciona');
