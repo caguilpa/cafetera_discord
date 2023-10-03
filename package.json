@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node ./deploy-commands.js && node ."
+    "start": "node deploy-commands.js && node index.js"
   },
   "engines": {
     "node": "18.x"
