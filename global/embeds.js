@@ -67,10 +67,18 @@ const listQueueEmbed = (songs) => {
     .setColor(0x64526e);
 };
 
+//Parar la reproducción
+const emptyQueueEmbed = () => {
+  return new EmbedBuilder()
+    .setColor(0xe0001a)
+    .setTitle("Sin canciones por reproducir\nQueue limpia");
+};
+
 module.exports = {
   musicEmbed,
   queueEmbed,
   deleteSongEmbed,
   stopEmbed,
   listQueueEmbed,
+  emptyQueueEmbed
 };

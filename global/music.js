@@ -1,6 +1,6 @@
 const play = require("play-dl");
 const { createAudioResource } = require("@discordjs/voice");
-const { musicEmbed } = require("./embeds");
+const { musicEmbed, emptyQueueEmbed } = require("./embeds");
 const queue = new Map();
 
 //& Crear Reproductor
@@ -118,10 +118,10 @@ const nextSong = async (guildId, key, msg, player, connection, type) => {
         return msg.channel.send("Reiniciando las canciones");
       }
     } else if (type === "auto") {
-//TODO cambiar embed
+
       connection.destroy();
       queue.delete(guildId);
-      return msg.channel.send("Sin canciones por reproducir\nQueue limpia");
+      return msg.channel.send({embeds: [emptyQueueEmbed()]});
     }
     return msg.reply("No tenemos mas canciones");
   }

@@ -7,6 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node ./deploy-commands.js && node ."
   },
+  "engines": {
+    "node" : "16.x"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
