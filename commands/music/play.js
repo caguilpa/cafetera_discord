@@ -39,11 +39,12 @@ module.exports = {
       });
     }
 
-    //# BUSQUEDA DE VIDEO
-    console.log("Cancion buscada: " + interaction.options.getString("cancion"));
+    //# BUSQUEDA DE VIDE
     const ytInfo = await play.search(interaction.options.getString("cancion"), { source : { youtube : "video" } });
 
-    if(!ytInfo){
+    console.log("Cancion buscada: " + ytInfo[0]);
+    
+    if(!ytInfo[0].url){
       return await interaction.reply({
         content: "Vuelva a intentarlo en unos segundos",
         ephemeral: true,
