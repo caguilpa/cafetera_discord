@@ -42,9 +42,9 @@ module.exports = {
     //# BUSQUEDA DE VIDE
     const ytInfo = await play.search(interaction.options.getString("cancion"), { source : { youtube : "video" } });
 
-    console.log("Cancion buscada: " + ytInfo[0]);
+    console.log("Cancion buscada: " + ytInfo);
 
-    if(ytInfo === undefined){
+    if(ytInfo[0] === undefined){
       return await interaction.reply({
         content: "Vuelva a intentarlo en unos segundos",
         ephemeral: true,
