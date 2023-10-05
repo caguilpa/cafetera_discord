@@ -40,7 +40,7 @@ module.exports = {
     }
 
     //# BUSQUEDA DE VIDEO
-    const ytInfo = await play.search(interaction.options.getString("cancion"));
+    const ytInfo = await play.search(interaction.options.getString("cancion"), { source : { youtube : "video" } });
     const stream = await play.stream(ytInfo[0].url);
 
     //% Agregar cancion a lista re produccion

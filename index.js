@@ -21,7 +21,7 @@ loadEvents();
 client.login(process.env.TOKEN);
 
 client.on(Events.InteractionCreate, async interaction => {
-    console.log('Funciona');
+
 	if (!interaction.isChatInputCommand()) return;
 
     const command = interaction.client.commands.get(interaction.commandName);
