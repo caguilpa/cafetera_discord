@@ -38,7 +38,12 @@ module.exports = {
         ephemeral: true,
       });
     }
-
+    play.setToken({
+      youtube : {
+          cookie : process.env.COOKIE
+          
+      }
+ })
     //# BUSQUEDA DE VIDE
     const ytInfo = await play.search(interaction.options.getString("cancion"), { source : { youtube : "video" } });
 
